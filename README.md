@@ -1,2 +1,2 @@
 # medicoApp
-Angular and .NET Core
+.NET Core and Angular

@@ -15,3 +15,4 @@ C:\12 NET CORE Y ANGULAR\medicoApp\medicoAppBack\Data\obj\Debug\net8.0\Data.pdb
 C:\12 NET CORE Y ANGULAR\medicoApp\medicoAppBack\Data\obj\Debug\net8.0\ref\Data.dll
 C:\12 NET CORE Y ANGULAR\medicoApp\medicoAppBack\Data\bin\Debug\net8.0\Data.runtimeconfig.json
 C:\12 NET CORE Y ANGULAR\medicoApp\medicoAppBack\Data\obj\Debug\net8.0\Data.genruntimeconfig.cache
+C:\12 NET CORE Y ANGULAR\medicoApp\medicoAppBack\Data\obj\Debug\net8.0\Data.sourcelink.json
