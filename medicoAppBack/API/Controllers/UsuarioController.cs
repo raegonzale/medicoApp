@@ -2,17 +2,17 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Models.DTOs;
 using Models.Entidades;
+using System.Data;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace API.Controllers
 {
-    //Clase 8
-    // Define la ruta base para el controlador como "api/[controller]".
-    // [controller] es un marcador de posición que se reemplaza con el nombre del controlador, en este caso, "usuario".
-    [Route("api/[controller]")]
-    // Indica que este controlador responde a solicitudes HTTP y se adhiere a las convenciones del controlador de API.
-    [ApiController]
-    public class UsuarioController : ControllerBase
+    
+
+    public class UsuarioController : BaseApiController
     {
         // Campo privado para el contexto de la base de datos.
         private readonly ApplicationDBContext _db;
@@ -44,6 +44,45 @@ namespace API.Controllers
             // Devuelve el usuario con un estado HTTP 200 OK.
             return Ok(usuario);
         }
-    }
+
+
+            
+        [HttpPost("REGISTRO")] // POST: api/usuarios/registro
+        public async Task<ActionResult<Usuario>> Registro(RegistroDto registroDto)
+        {
+            // Verificar si el usuario ya existe en la base de datos.
+            if (await UsuarioExiste(registroDto.Username))
+            {
+             return BadRequest("Usuario ya registrado");
+            }
+
+            // Crear una instancia de HMACSHA512 para generar el hash de la contraseña y la clave de la sal.
+            using var hmac = new HMACSHA512();
+
+            // Crear un nuevo objeto Usuario y asignar sus propiedades.
+            var usuario = new Usuario
+             {
+             Username = registroDto.Username.ToLower(), // Almacenar el nombre de usuario en minúsculas.
+             PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registroDto.Password)), // Calcular el hash de la contraseña.
+             PasswordSalt = hmac.Key // Asignar la clave de la sal.
+             };
+
+            // Añadir el nuevo usuario al contexto de la base de datos.
+            _db.Usuarios.Add(usuario);
+
+            // Guardar los cambios en la base de datos de forma asincrónica.
+            await _db.SaveChangesAsync();
+
+            // Devolver el objeto Usuario creado.
+            return usuario;
+        }
+
+        // Método auxiliar para comprobar si un nombre de usuario ya existe en la base de datos.
+        private async Task<bool> UsuarioExiste(string username)
+        {
+        // Verificar de forma asincrónica si algún usuario en la base de datos tiene el mismo nombre de usuario en minúsculas.
+             return await _db.Usuarios.AnyAsync(x => x.Username == username.ToLower());
+          }
+        }
 
 }
