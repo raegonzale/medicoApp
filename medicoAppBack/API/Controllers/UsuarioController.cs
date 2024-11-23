@@ -47,7 +47,7 @@ namespace API.Controllers
 
 
             
-        [HttpPost("REGISTRO")] // POST: api/usuarios/registro
+        [HttpPost("registro")] // POST: api/usuarios/registro
         public async Task<ActionResult<Usuario>> Registro(RegistroDto registroDto)
         {
             // Verificar si el usuario ya existe en la base de datos.
@@ -55,7 +55,6 @@ namespace API.Controllers
             {
              return BadRequest("Usuario ya registrado");
             }
-
             // Crear una instancia de HMACSHA512 para generar el hash de la contraseña y la clave de la sal.
             using var hmac = new HMACSHA512();
 
@@ -76,6 +75,39 @@ namespace API.Controllers
             // Devolver el objeto Usuario creado.
             return usuario;
         }
+
+        [HttpPost("login")] // Este atributo indica que el método maneja solicitudes HTTP POST en la ruta api/usuario/login.
+        public async Task<ActionResult<Usuario>> Login(LoginDto loginDto)
+        {
+            // Buscar al usuario en la base de datos cuyo nombre de usuario coincida con el proporcionado en el objeto loginDto.
+            var usuario = await _db.Usuarios.SingleOrDefaultAsync(x => x.Username == loginDto.Username);
+
+            // Si el usuario no existe, devolver un error 401 Unauthorized con el mensaje "Usuario no valido".
+            if (usuario == null)
+            {
+                return Unauthorized("Usuario no valido");
+            }
+
+            // Crear una instancia de HMACSHA512 usando la sal almacenada del usuario.
+            using var hmac = new HMACSHA512(usuario.PasswordSalt);
+
+            // Calcular el hash de la contraseña proporcionada usando la instancia HMACSHA512.
+            var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password));
+
+            // Comparar el hash calculado con el hash almacenado en la base de datos.
+            for (int i = 0; i < computedHash.Length; i++)
+            {
+                // Si algún byte del hash calculado no coincide con el hash almacenado, devolver un error 401 Unauthorized con el mensaje "Password no valido".
+                if (computedHash[i] != usuario.PasswordHash[i])
+                {
+                    return Unauthorized("Password no valido");
+                }
+            }
+
+            // Si las contraseñas coinciden, devolver el objeto usuario.
+            return usuario;
+        }
+
 
         // Método auxiliar para comprobar si un nombre de usuario ya existe en la base de datos.
         private async Task<bool> UsuarioExiste(string username)
